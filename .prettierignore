@@ -1,3 +1,4 @@
 .prettierignore
+.npmignore
 .gitignore
 dist/
