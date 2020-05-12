@@ -4,8 +4,6 @@ import { nanoid } from 'nanoid/async'
 import camelCase from 'lodash.camelcase'
 import mapValues from 'lodash.mapvalues'
 
-const host = 'https://api.q.qq.com'
-
 export enum ErrCode {
   SUCCESS = 0,
   BUSY = -1,
@@ -181,17 +179,17 @@ export class MiniPay {
     const access_token = await this.#getAccessToken()
     const sig = this.sig(pathname, { ...payload, ...params })
     try {
-      const response = await got(`${host}${pathname}`, {
+      const response = await got(`https://api.q.qq.com${pathname}`, {
         method: 'POST',
         searchParams: {
           access_token,
         },
         json: {
-          ...payload,
           pfkey: 'pfKey',
+          sandbox_env: this.#sandbox ? 1 : 0,
+          ...payload,
           ...params,
           sig,
-          sandbox_env: this.#sandbox ? 1 : 0,
           qq_sig: this.qqSig(pathname, user.sessionKey, {
             access_token,
             ...payload,
