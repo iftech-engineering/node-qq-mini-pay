@@ -155,7 +155,7 @@ export class MiniPay {
   }
 
   protected async base<I extends object, O extends Err>(
-    method: string,
+    pathname: string,
     user: User,
     params: I,
     retry = 0,
@@ -170,9 +170,9 @@ export class MiniPay {
       pf: `qqapp_qq-2001-android-2011-${this.#appId}`,
     }
     const access_token = await this.#getAccessToken()
-    const sig = this.sig(method, { ...payload, ...params })
+    const sig = this.sig(pathname, { ...payload, ...params })
     try {
-      const data = await got(`${host}${method}`, {
+      const data = await got(`${host}${pathname}`, {
         method: 'POST',
         searchParams: {
           access_token,
@@ -183,7 +183,7 @@ export class MiniPay {
           ...params,
           sig,
           sandbox_env: this.#sandbox ? 1 : 0,
-          qq_sig: this.qqSig(method, user.sessionKey, {
+          qq_sig: this.qqSig(pathname, user.sessionKey, {
             access_token,
             ...payload,
             sig,
@@ -202,16 +202,16 @@ export class MiniPay {
       }
     } catch (err) {
       if (retry < this.#retryLimit) {
-        return this.base(method, user, params, retry + 1)
+        return this.base(pathname, user, params, retry + 1)
       }
       throw err
     }
   }
 
-  private sig(method: string, obj: { [key in typeof keys[number]]?: string | number }): string {
+  private sig(pathname: string, obj: { [key in typeof keys[number]]?: string | number }): string {
     return createHmac('sha1', this.#appKey)
       .update(
-        `POST&${encodeURIComponent(method)}&${encodeURIComponent(
+        `POST&${encodeURIComponent(pathname)}&${encodeURIComponent(
           keys.map((key) => `${key}=${obj[key] || ''}`).join('&'),
         )}`,
       )
@@ -219,13 +219,13 @@ export class MiniPay {
   }
 
   private qqSig(
-    method: string,
+    pathname: string,
     sessionKey: string,
     obj: { [key in typeof qqkeys[number]]: string | number },
   ): string {
     return createHmac('sha1', `${sessionKey}&`)
       .update(
-        `POST&${encodeURIComponent(method)}&${encodeURIComponent(
+        `POST&${encodeURIComponent(pathname)}&${encodeURIComponent(
           qqkeys.map((key) => `${key}=${obj[key]}`).join('&'),
         )}`,
       )
