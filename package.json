@@ -1,18 +1,20 @@
 {
   "name": "qq-mini-pay",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "",
-  "main": "index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "compile": "tsc",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "prettier --write '**/*'"
+    "format": "prettier --write '**/*'",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jike-engineering/node-qq-mini-pay.git"
   },
-  "author": "",
+  "author": "RenzHoly <renzholy@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/jike-engineering/node-qq-mini-pay/issues"
@@ -40,5 +42,8 @@
       "npm run format",
       "git add"
     ]
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
   }
 }
