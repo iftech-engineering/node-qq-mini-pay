@@ -1,8 +1,9 @@
+import { createHmac } from 'crypto'
 import got from 'got'
 import { nanoid } from 'nanoid/async'
 import _ from 'lodash'
 
-const endpoint = 'https://api.q.qq.com/api/json/openApiPay'
+const host = 'https://api.q.qq.com'
 
 export enum ErrCode {
   SUCCESS = 0,
@@ -22,6 +23,45 @@ export type User = {
   sessionKey: string
   zoneId?: string
 }
+
+const keys = [
+  'amt',
+  'app_remark',
+  'appid',
+  'bill_no',
+  'offer_id',
+  'openid',
+  'openkey',
+  'pay_item',
+  'pf',
+  'ts',
+  'user_ip',
+  'zone_id',
+] as [
+  'amt',
+  'app_remark',
+  'appid',
+  'bill_no',
+  'offer_id',
+  'openid',
+  'openkey',
+  'pay_item',
+  'pf',
+  'ts',
+  'user_ip',
+  'zone_id',
+]
+
+const qqkeys = ['access_token', 'appid', 'offer_id', 'openid', 'pf', 'sig', 'ts', 'zone_id'] as [
+  'access_token',
+  'appid',
+  'offer_id',
+  'openid',
+  'pf',
+  'sig',
+  'ts',
+  'zone_id',
+]
 
 export class MiniPay {
   readonly #appId: string
@@ -60,7 +100,7 @@ export class MiniPay {
     usedGenAmt: number
     tradeId: string
   }> {
-    return this.base('MiniPay', user, {
+    return this.base('/api/json/openApiPay/MiniPay', user, {
       bill_no: await nanoid(),
       amt: params.amt,
       user_ip: params.userIp,
@@ -76,7 +116,7 @@ export class MiniPay {
     errMsg: string
     remainder: number
   }> {
-    return this.base('MiniGetBalance', user, {})
+    return this.base('/api/json/openApiPay/MiniGetBalance', user, {})
   }
 
   public async present(
@@ -91,7 +131,7 @@ export class MiniPay {
     billNo: string
     balance: number
   }> {
-    return this.base('MiniPresent', user, {
+    return this.base('/api/json/openApiPay/MiniPresent', user, {
       bill_no: await nanoid(),
       present_counts: params.presentCounts,
       user_ip: params.userIp,
@@ -105,24 +145,31 @@ export class MiniPay {
       errMsg: string
     }
   >(method: string, user: User, params: P): Promise<T> {
-    const data = await got(`${endpoint}/${method}`, {
+    const payload = {
+      openid: user.openId,
+      openkey: user.sessionKey,
+      appid: this.#appId,
+      offer_id: this.#offerId,
+      ts: Math.round(Date.now() / 1000),
+      zone_id: user.zoneId || '1',
+      pf: `qqapp_qq-2001-android-2011-${this.#appId}`,
+    }
+    const access_token = await this.#getAccessToken()
+    const data = await got(`${host}${method}`, {
       method: 'POST',
       searchParams: {
-        access_token: await this.#getAccessToken(),
+        access_token,
       },
       json: {
-        openid: user.openId,
-        openkey: user.sessionKey,
-        appid: this.#appId,
-        offer_id: this.#offerId,
-        ts: Math.round(Date.now() / 1000),
-        zone_id: user.zoneId || '1',
-        pf: `qqapp_qq-2001-android-2011-${this.#appId}`,
+        ...payload,
         pfkey: 'pfKey',
         ...params,
-        sig: this.sign(),
+        sig: this.sig(method, { ...payload, ...params }),
         sandbox_env: this.#sandbox ? 1 : 0,
-        qq_sig: this.qqSign(),
+        qq_sig: this.qqSig(method, user.sessionKey, {
+          access_token,
+          ...payload,
+        }),
       },
     }).json<{
       errcode: ErrCode
@@ -135,13 +182,27 @@ export class MiniPay {
     }
   }
 
-  private sign(): string {
-    // TODO: impl
-    return this.#appKey
+  private sig(method: string, obj: { [key in typeof keys[number]]?: string | number }): string {
+    return createHmac('sha1', this.#appKey)
+      .update(
+        `POST&${encodeURIComponent(method)}&${encodeURIComponent(
+          keys.map((key) => `${key}=${obj[key] || ''}`).join('&'),
+        )}`,
+      )
+      .digest('base64')
   }
 
-  private qqSign(): string {
-    // TODO: impl
-    return this.#appKey
+  private qqSig(
+    method: string,
+    sessionKey: string,
+    obj: { [key in typeof qqkeys[number]]?: string | number },
+  ): string {
+    return createHmac('sha1', `${sessionKey}&`)
+      .update(
+        `POST&${encodeURIComponent(method)}&${encodeURIComponent(
+          qqkeys.map((key) => `${key}=${obj[key] || ''}`).join('&'),
+        )}`,
+      )
+      .digest('base64')
   }
 }
