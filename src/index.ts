@@ -1,7 +1,8 @@
 import { createHmac } from 'crypto'
 import got from 'got'
 import { nanoid } from 'nanoid/async'
-import _ from 'lodash'
+import camelCase from 'lodash.camelcase'
+import mapValues from 'lodash.mapvalues'
 
 const host = 'https://api.q.qq.com'
 
@@ -188,14 +189,16 @@ export class MiniPay {
             sig,
           }),
         },
+        http2: true,
       }).json<{
         errcode: ErrCode
         errmsg: string
       }>()
+      const { errcode, errmsg, ...rest } = data
       return {
-        errCode: data.errcode,
-        errMsg: data.errmsg,
-        ...(_(data).omit('errcode', 'errmsg').mapValues(_.camelCase).value() as any),
+        errCode: errcode,
+        errMsg: errmsg,
+        ...(mapValues(rest, camelCase) as any),
       }
     } catch (err) {
       if (retry < this.#retryLimit) {
