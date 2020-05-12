@@ -72,21 +72,31 @@ export class MiniPay {
   readonly #appId: string
   readonly #appKey: string
   readonly #offerId: string
-  readonly #sandbox?: boolean
+  readonly #sandbox: boolean
+  readonly #retryLimit: number
   readonly #getAccessToken: () => Promise<string>
 
-  constructor(params: {
+  constructor({
+    appId,
+    appKey,
+    offerId,
+    sandbox = false,
+    retryLimit = 3,
+    getAccessToken,
+  }: {
     appId: string
     appKey: string
     offerId: string
     sandbox?: boolean
+    retryLimit?: number
     getAccessToken: () => Promise<string>
   }) {
-    this.#appId = params.appId
-    this.#appKey = params.appKey
-    this.#offerId = params.offerId
-    this.#sandbox = params.sandbox
-    this.#getAccessToken = params.getAccessToken
+    this.#appId = appId
+    this.#appKey = appKey
+    this.#offerId = offerId
+    this.#sandbox = sandbox
+    this.#retryLimit = retryLimit
+    this.#getAccessToken = getAccessToken
   }
 
   public async pay(
@@ -147,6 +157,7 @@ export class MiniPay {
     method: string,
     user: User,
     params: I,
+    retry = 0,
   ): Promise<O> {
     const payload = {
       openid: user.openId,
@@ -159,31 +170,38 @@ export class MiniPay {
     }
     const access_token = await this.#getAccessToken()
     const sig = this.sig(method, { ...payload, ...params })
-    const data = await got(`${host}${method}`, {
-      method: 'POST',
-      searchParams: {
-        access_token,
-      },
-      json: {
-        ...payload,
-        pfkey: 'pfKey',
-        ...params,
-        sig,
-        sandbox_env: this.#sandbox ? 1 : 0,
-        qq_sig: this.qqSig(method, user.sessionKey, {
+    try {
+      const data = await got(`${host}${method}`, {
+        method: 'POST',
+        searchParams: {
           access_token,
+        },
+        json: {
           ...payload,
+          pfkey: 'pfKey',
+          ...params,
           sig,
-        }),
-      },
-    }).json<{
-      errcode: ErrCode
-      errmsg: string
-    }>()
-    return {
-      errCode: data.errcode,
-      errMsg: data.errmsg,
-      ...(_(data).omit('errcode', 'errmsg').mapValues(_.camelCase).value() as any),
+          sandbox_env: this.#sandbox ? 1 : 0,
+          qq_sig: this.qqSig(method, user.sessionKey, {
+            access_token,
+            ...payload,
+            sig,
+          }),
+        },
+      }).json<{
+        errcode: ErrCode
+        errmsg: string
+      }>()
+      return {
+        errCode: data.errcode,
+        errMsg: data.errmsg,
+        ...(_(data).omit('errcode', 'errmsg').mapValues(_.camelCase).value() as any),
+      }
+    } catch (err) {
+      if (retry < this.#retryLimit) {
+        return this.base(method, user, params, retry + 1)
+      }
+      throw err
     }
   }
 
