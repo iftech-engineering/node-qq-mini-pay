@@ -24,6 +24,11 @@ export type User = {
   zoneId?: string
 }
 
+export type Err = {
+  errCode: ErrCode
+  errMsg: string
+}
+
 const keys = [
   'amt',
   'app_remark',
@@ -92,14 +97,14 @@ export class MiniPay {
       payItem?: string
       appRemark?: string
     },
-  ): Promise<{
-    errCode: ErrCode
-    errMsg: string
-    billNo: string
-    balance: number
-    usedGenAmt: number
-    tradeId: string
-  }> {
+  ): Promise<
+    {
+      billNo: string
+      balance: number
+      usedGenAmt: number
+      tradeId: string
+    } & Err
+  > {
     return this.base('/api/json/openApiPay/MiniPay', user, {
       bill_no: await nanoid(),
       amt: params.amt,
@@ -111,11 +116,11 @@ export class MiniPay {
 
   public async getBalance(
     user: User,
-  ): Promise<{
-    errCode: ErrCode
-    errMsg: string
-    remainder: number
-  }> {
+  ): Promise<
+    {
+      remainder: number
+    } & Err
+  > {
     return this.base('/api/json/openApiPay/MiniGetBalance', user, {})
   }
 
@@ -125,12 +130,12 @@ export class MiniPay {
       presentCounts: number
       userIp?: string
     },
-  ): Promise<{
-    errCode: ErrCode
-    errMsg: string
-    billNo: string
-    balance: number
-  }> {
+  ): Promise<
+    {
+      billNo: string
+      balance: number
+    } & Err
+  > {
     return this.base('/api/json/openApiPay/MiniPresent', user, {
       bill_no: await nanoid(),
       present_counts: params.presentCounts,
@@ -138,13 +143,11 @@ export class MiniPay {
     })
   }
 
-  protected async base<
-    P extends object,
-    T extends {
-      errCode: ErrCode
-      errMsg: string
-    }
-  >(method: string, user: User, params: P): Promise<T> {
+  protected async base<I extends object, O extends Err>(
+    method: string,
+    user: User,
+    params: I,
+  ): Promise<O> {
     const payload = {
       openid: user.openId,
       openkey: user.sessionKey,
