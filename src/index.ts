@@ -17,7 +17,7 @@ export enum ErrCode {
   PARAMS_ERROR = 90018,
 }
 
-type BaseParams = {
+export type User = {
   openId: string
   sessionKey: string
   zoneId?: string
@@ -45,12 +45,13 @@ export class MiniPay {
   }
 
   public async pay(
+    user: User,
     params: {
       amt: number
       userIp?: string
       payItem?: string
       appRemark?: string
-    } & BaseParams,
+    },
   ): Promise<{
     errCode: ErrCode
     errMsg: string
@@ -59,68 +60,42 @@ export class MiniPay {
     usedGenAmt: number
     tradeId: string
   }> {
-    const { openId, sessionKey, zoneId } = params
-    return this.base(
-      'MiniPay',
-      {
-        openId,
-        sessionKey,
-        zoneId,
-      },
-      {
-        bill_no: await nanoid(),
-        amt: params.amt,
-        user_ip: params.userIp,
-        pay_item: params.payItem,
-        app_remark: params.appRemark,
-      },
-    )
+    return this.base('MiniPay', user, {
+      bill_no: await nanoid(),
+      amt: params.amt,
+      user_ip: params.userIp,
+      pay_item: params.payItem,
+      app_remark: params.appRemark,
+    })
   }
 
   public async getBalance(
-    params: BaseParams,
+    user: User,
   ): Promise<{
     errCode: ErrCode
     errMsg: string
     remainder: number
   }> {
-    const { openId, sessionKey, zoneId } = params
-    return this.base(
-      'MiniGetBalance',
-      {
-        openId,
-        sessionKey,
-        zoneId,
-      },
-      {},
-    )
+    return this.base('MiniGetBalance', user, {})
   }
 
   public async present(
+    user: User,
     params: {
       presentCounts: number
       userIp?: string
-    } & BaseParams,
+    },
   ): Promise<{
     errCode: ErrCode
     errMsg: string
     billNo: string
     balance: number
   }> {
-    const { openId, sessionKey, zoneId } = params
-    return this.base(
-      'MiniPresent',
-      {
-        openId,
-        sessionKey,
-        zoneId,
-      },
-      {
-        bill_no: await nanoid(),
-        present_counts: params.presentCounts,
-        user_ip: params.userIp,
-      },
-    )
+    return this.base('MiniPresent', user, {
+      bill_no: await nanoid(),
+      present_counts: params.presentCounts,
+      user_ip: params.userIp,
+    })
   }
 
   protected async base<
@@ -129,19 +104,19 @@ export class MiniPay {
       errCode: ErrCode
       errMsg: string
     }
-  >(method: string, baseParams: BaseParams, params: P): Promise<T> {
+  >(method: string, user: User, params: P): Promise<T> {
     const data = await got(`${endpoint}/${method}`, {
       method: 'POST',
       searchParams: {
         access_token: await this.#getAccessToken(),
       },
       json: {
-        openid: baseParams.openId,
-        openkey: baseParams.sessionKey,
+        openid: user.openId,
+        openkey: user.sessionKey,
         appid: this.#appId,
         offer_id: this.#offerId,
         ts: Math.round(Date.now() / 1000),
-        zone_id: baseParams.zoneId || '1',
+        zone_id: user.zoneId || '1',
         pf: `qqapp_qq-2001-android-2011-${this.#appId}`,
         pfkey: 'pfKey',
         ...params,
