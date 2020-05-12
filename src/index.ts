@@ -58,7 +58,16 @@ const keys = [
   'zone_id',
 ]
 
-const qqkeys = ['access_token', 'appid', 'offer_id', 'openid', 'pf', 'sig', 'ts', 'zone_id'] as [
+const qqkeys = [
+  'access_token',
+  'appid',
+  'offer_id',
+  'openid',
+  'pf',
+  'sig',
+  'ts',
+  'zone_id',
+] as [
   'access_token',
   'appid',
   'offer_id',
@@ -211,7 +220,10 @@ export class MiniPay {
     }
   }
 
-  private sig(pathname: string, obj: { [key in typeof keys[number]]?: string | number }): string {
+  private sig(
+    pathname: string,
+    obj: { [key in typeof keys[number]]?: string | number },
+  ): string {
     return createHmac('sha1', this.#appKey)
       .update(
         `POST&${encodeURIComponent(pathname)}&${encodeURIComponent(
