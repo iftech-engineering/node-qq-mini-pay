@@ -172,7 +172,7 @@ export class MiniPay {
     const access_token = await this.#getAccessToken()
     const sig = this.sig(pathname, { ...payload, ...params })
     try {
-      const data = await got(`${host}${pathname}`, {
+      const response = await got(`${host}${pathname}`, {
         method: 'POST',
         searchParams: {
           access_token,
@@ -194,7 +194,10 @@ export class MiniPay {
         errcode: ErrCode
         errmsg: string
       }>()
-      const { errcode, errmsg, ...rest } = data
+      const { errcode, errmsg, ...rest } = response
+      if (errcode === ErrCode.BUSY) {
+        throw new Error(errmsg)
+      }
       return {
         errCode: errcode,
         errMsg: errmsg,
