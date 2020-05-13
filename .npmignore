@@ -1,5 +1,6 @@
 src/
 test/
+.circleci/
 tsconfig.json
 .mocharc.json
 .gitignore
