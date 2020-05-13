@@ -1,4 +1,5 @@
 import { equal } from 'assert'
+
 import { MiniPay } from '../src'
 
 describe('Minipay', () => {
