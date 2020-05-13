@@ -276,7 +276,7 @@ export class MiniPay {
       pf: `qqapp_qq-2001-android-2011-${this.#appId}`,
     }
     const access_token = await this.#getAccessToken()
-    const sig = this.sig(pathname, { ...payload, ...params })
+    const sig = MiniPay.sig(pathname, this.#appKey, { ...payload, ...params })
     try {
       const response = await got(`https://api.q.qq.com${pathname}`, {
         method: 'POST',
@@ -289,7 +289,7 @@ export class MiniPay {
           ...payload,
           ...params,
           sig,
-          qq_sig: this.qqSig(pathname, user.sessionKey, {
+          qq_sig: MiniPay.qqSig(pathname, user.sessionKey, {
             access_token,
             ...payload,
             sig,
@@ -317,11 +317,12 @@ export class MiniPay {
     }
   }
 
-  private sig(
+  private static sig(
     pathname: string,
+    appKey: string,
     obj: { [key in typeof keys[number]]?: string | number },
   ): string {
-    return createHmac('sha1', this.#appKey)
+    return createHmac('sha1', `${appKey}&`)
       .update(
         `POST&${encodeURIComponent(pathname)}&${encodeURIComponent(
           keys.map((key) => `${key}=${obj[key] || ''}`).join('&'),
@@ -330,7 +331,7 @@ export class MiniPay {
       .digest('base64')
   }
 
-  private qqSig(
+  private static qqSig(
     pathname: string,
     sessionKey: string,
     obj: { [key in typeof qqkeys[number]]: string | number },
