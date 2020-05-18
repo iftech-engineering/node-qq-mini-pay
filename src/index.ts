@@ -3,6 +3,9 @@ import got from 'got'
 import { nanoid } from 'nanoid/async'
 import camelCase from 'lodash.camelcase'
 import mapValues from 'lodash.mapvalues'
+import Debug from 'debug'
+
+const debug = Debug('qq-mini-pay')
 
 /**
  * 错误码
@@ -277,29 +280,32 @@ export class MiniPay {
     }
     const access_token = await this.#getAccessToken()
     const sig = MiniPay.sig(pathname, this.#appKey, { ...payload, ...params })
+    const json = {
+      pfkey: 'pfKey',
+      sandbox_env: this.#sandbox ? 1 : 0,
+      ...payload,
+      ...params,
+      sig,
+      qq_sig: MiniPay.qqSig(pathname, user.sessionKey, {
+        access_token,
+        ...payload,
+        sig,
+      }),
+    }
+    debug('request', json)
     try {
       const response = await got(`https://api.q.qq.com${pathname}`, {
         method: 'POST',
         searchParams: {
           access_token,
         },
-        json: {
-          pfkey: 'pfKey',
-          sandbox_env: this.#sandbox ? 1 : 0,
-          ...payload,
-          ...params,
-          sig,
-          qq_sig: MiniPay.qqSig(pathname, user.sessionKey, {
-            access_token,
-            ...payload,
-            sig,
-          }),
-        },
+        json,
         http2: true,
       }).json<{
         errcode: ErrCode
         errmsg: string
       }>()
+      debug('response', response)
       const { errcode, errmsg, ...rest } = response
       if (errcode === ErrCode.BUSY) {
         throw new Error(errmsg)
