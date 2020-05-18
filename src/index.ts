@@ -134,11 +134,11 @@ const keysToSign = {
 
 /**
  * 错误
- * @typedef {object} Err
+ * @typedef {object} Response
  * @property {ErrCode} errCode 错误码
  * @property {string} errMsg 错误信息
  */
-export type Err = {
+export type Response = {
   errCode: ErrCode
   errMsg: string
 }
@@ -203,7 +203,7 @@ export class MiniPay {
    * @property {string} response.balance 预扣后的余额
    * @property {number} response.usedGenAmt 本次扣的赠送币的金额
    * @property {string} response.tradeId 平台分配的本次交易 id，可用于发小程序小游戏的服务号消息
-   * @property {...Err} 错误
+   * @property {...Response} 错误
    */
   public async pay(
     user: User,
@@ -219,7 +219,7 @@ export class MiniPay {
       balance: number
       usedGenAmt: number
       tradeId: string
-    } & Err
+    } & Response
   > {
     const payload = _.omitBy(
       {
@@ -271,14 +271,14 @@ export class MiniPay {
    *
    * @return {Promise} response
    * @property {number} response.remainder 金币余额
-   * @property {...Err} 错误
+   * @property {...Response} 错误
    */
   public async getBalance(
     user: User,
   ): Promise<
     {
       remainder: number
-    } & Err
+    } & Response
   > {
     const payload = _.omitBy(
       {
@@ -331,7 +331,7 @@ export class MiniPay {
    * @return {Promise} response
    * @property {string} response.billNo 订单号
    * @property {number} response.balance 预扣后的余额
-   * @property {...Err} 错误
+   * @property {...Response} 错误
    */
   public async present(
     user: User,
@@ -343,7 +343,7 @@ export class MiniPay {
     {
       billNo: string
       balance: number
-    } & Err
+    } & Response
   > {
     const payload = _.omitBy(
       {
@@ -387,12 +387,15 @@ export class MiniPay {
     })
   }
 
-  protected async base<I extends object, O extends Err>(
-    method: string,
-    accessToken: string,
-    params: I,
-    retry = 0,
-  ): Promise<O> {
+  protected async base<
+    I extends {
+      access_token: string
+      sig: string
+      sandbox_env: 0 | 1
+      qq_sig: string
+    },
+    O extends Response
+  >(method: string, accessToken: string, params: I, retry = 0): Promise<O> {
     debug('request', params)
     try {
       const response = await got(
@@ -438,7 +441,9 @@ export class MiniPay {
     return createHmac('sha1', `${appKey}&`)
       .update(
         `GET&${encodeURIComponent(pathname)}&${encodeURIComponent(
-          keys.map((key) => `${key}=${obj[key] || ''}`).join('&'),
+          keys
+            .map((key) => `${key}=${_.isNil(obj[key]) ? '' : obj[key]}`)
+            .join('&'),
         )}`,
       )
       .digest('base64')
