@@ -69,62 +69,6 @@ export type Err = {
 }
 
 /**
- * 米大师签名所需 key，已排序
- * @constant {string[]}
- */
-const keys = [
-  'amt',
-  'app_remark',
-  'appid',
-  'bill_no',
-  'offer_id',
-  'openid',
-  'openkey',
-  'pay_item',
-  'pf',
-  'ts',
-  'user_ip',
-  'zone_id',
-] as [
-  'amt',
-  'app_remark',
-  'appid',
-  'bill_no',
-  'offer_id',
-  'openid',
-  'openkey',
-  'pay_item',
-  'pf',
-  'ts',
-  'user_ip',
-  'zone_id',
-]
-
-/**
- * qq 签名所需 key，已排序
- * @constant {string[]}
- */
-const qqkeys = [
-  'access_token',
-  'appid',
-  'offer_id',
-  'openid',
-  'pf',
-  'sig',
-  'ts',
-  'zone_id',
-] as [
-  'access_token',
-  'appid',
-  'offer_id',
-  'openid',
-  'pf',
-  'sig',
-  'ts',
-  'zone_id',
-]
-
-/**
  * 虚拟支付
  * @class
  */
@@ -202,13 +146,42 @@ export class MiniPay {
       tradeId: string
     } & Err
   > {
-    return this.base('MiniPay', '/v3/r/mpay/pay_m', user, {
-      bill_no: await nanoid(),
-      amt: params.amt,
-      user_ip: params.userIp,
-      pay_item: params.payItem,
-      app_remark: params.appRemark,
-    })
+    return this.base(
+      'MiniPay',
+      '/v3/r/mpay/pay_m',
+      [
+        'amt',
+        'app_remark',
+        'appid',
+        'bill_no',
+        'offer_id',
+        'openid',
+        'openkey',
+        'pay_item',
+        'pf',
+        'ts',
+        'user_ip',
+        'zone_id',
+      ],
+      [
+        'access_token',
+        'appid',
+        'offer_id',
+        'openid',
+        'pf',
+        'sig',
+        'ts',
+        'zone_id',
+      ],
+      user,
+      {
+        bill_no: await nanoid(),
+        amt: params.amt,
+        user_ip: params.userIp,
+        pay_item: params.payItem,
+        app_remark: params.appRemark,
+      },
+    )
   }
 
   /**
@@ -227,7 +200,32 @@ export class MiniPay {
       remainder: number
     } & Err
   > {
-    return this.base('MiniGetBalance', '/v3/r/mpay/get_balance_m', user, {})
+    return this.base(
+      'MiniGetBalance',
+      '/v3/r/mpay/get_balance_m',
+      [
+        'appid',
+        'offer_id',
+        'openid',
+        'openkey',
+        'pf',
+        'pfkey',
+        'ts',
+        'zone_id',
+      ],
+      [
+        'access_token',
+        'appid',
+        'offer_id',
+        'openid',
+        'pf',
+        'sig',
+        'ts',
+        'zone_id',
+      ],
+      user,
+      {},
+    )
   }
 
   /**
@@ -256,16 +254,46 @@ export class MiniPay {
       balance: number
     } & Err
   > {
-    return this.base('MiniPresent', '/v3/r/mpay/present_m', user, {
-      bill_no: await nanoid(),
-      present_counts: params.presentCounts,
-      user_ip: params.userIp,
-    })
+    return this.base(
+      'MiniPresent',
+      '/v3/r/mpay/present_m',
+      [
+        'bill_no',
+        'offer_id',
+        'openid',
+        'openkey',
+        'pf',
+        'pfkey',
+        'present_counts',
+        'qq_appid',
+        'ts',
+        'user_ip',
+        'zone_id',
+      ],
+      [
+        'access_token',
+        'offer_id',
+        'openid',
+        'pf',
+        'qq_appid',
+        'sig',
+        'ts',
+        'zone_id',
+      ],
+      user,
+      {
+        bill_no: await nanoid(),
+        present_counts: params.presentCounts,
+        user_ip: params.userIp,
+      },
+    )
   }
 
   protected async base<I extends object, O extends Err>(
     method: string,
     pathname: string,
+    keysToSign: string[],
+    qqKeysToSign: string[],
     user: User,
     params: I,
     retry = 0,
@@ -280,14 +308,17 @@ export class MiniPay {
       pf: `qqapp_qq-2001-android-2011-${this.#appId}`,
     }
     const access_token = await this.#getAccessToken()
-    const sig = MiniPay.sig(pathname, this.#appKey, { ...payload, ...params })
+    const sig = MiniPay.sig(pathname, this.#appKey, keysToSign, {
+      ...payload,
+      ...params,
+    })
     const json = {
       pfkey: 'pfKey',
       sandbox_env: this.#sandbox ? 1 : 0,
       ...payload,
       ...params,
       sig,
-      qq_sig: MiniPay.qqSig(pathname, user.sessionKey, {
+      qq_sig: MiniPay.qqSig(pathname, user.sessionKey, qqKeysToSign, {
         access_token,
         ...payload,
         sig,
@@ -323,7 +354,15 @@ export class MiniPay {
       }
     } catch (err) {
       if (err.code === ErrCode.BUSY && retry < this.#retryLimit) {
-        return this.base(method, pathname, user, params, retry + 1)
+        return this.base(
+          method,
+          pathname,
+          keysToSign,
+          qqKeysToSign,
+          user,
+          params,
+          retry + 1,
+        )
       }
       throw err
     }
@@ -332,11 +371,12 @@ export class MiniPay {
   private static sig(
     pathname: string,
     appKey: string,
-    obj: { [key in typeof keys[number]]?: string | number },
+    keys: string[],
+    obj: { [key: string]: string | number },
   ): string {
     return createHmac('sha1', `${appKey}&`)
       .update(
-        `POST&${encodeURIComponent(pathname)}&${encodeURIComponent(
+        `GET&${encodeURIComponent(pathname)}&${encodeURIComponent(
           keys.map((key) => `${key}=${obj[key] || ''}`).join('&'),
         )}`,
       )
@@ -346,12 +386,13 @@ export class MiniPay {
   private static qqSig(
     pathname: string,
     sessionKey: string,
-    obj: { [key in typeof qqkeys[number]]: string | number },
+    keys: string[],
+    obj: { [key: string]: string | number },
   ): string {
     return createHmac('sha1', `${sessionKey}&`)
       .update(
         `POST&${encodeURIComponent(pathname)}&${encodeURIComponent(
-          qqkeys.map((key) => `${key}=${obj[key]}`).join('&'),
+          keys.map((key) => `${key}=${obj[key]}`).join('&'),
         )}`,
       )
       .digest('base64')
