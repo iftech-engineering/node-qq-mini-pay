@@ -56,6 +56,82 @@ export type User = {
   zoneId?: string
 }
 
+const keysToSign = {
+  pay: {
+    sig: [
+      'amt',
+      'app_remark',
+      'appid',
+      'bill_no',
+      'offer_id',
+      'openid',
+      'openkey',
+      'pay_item',
+      'pf',
+      'ts',
+      'user_ip',
+      'zone_id',
+    ],
+    qqSig: [
+      'access_token',
+      'appid',
+      'offer_id',
+      'openid',
+      'pf',
+      'sig',
+      'ts',
+      'zone_id',
+    ],
+  },
+  getBalance: {
+    sig: [
+      'appid',
+      'offer_id',
+      'openid',
+      'openkey',
+      'pf',
+      'pfkey',
+      'ts',
+      'zone_id',
+    ],
+    qqSig: [
+      'access_token',
+      'appid',
+      'offer_id',
+      'openid',
+      'pf',
+      'sig',
+      'ts',
+      'zone_id',
+    ],
+  },
+  present: {
+    sig: [
+      'bill_no',
+      'offer_id',
+      'openid',
+      'openkey',
+      'pf',
+      'pfkey',
+      'present_counts',
+      'qq_appid',
+      'ts',
+      'user_ip',
+      'zone_id',
+    ],
+    qqSig: [
+      'access_token',
+      'offer_id',
+      'openid',
+      'pf',
+      'qq_appid',
+      'sig',
+      'ts',
+      'zone_id',
+    ],
+  },
+}
+
 /**
  * 错误
  * @typedef {object} Err
@@ -165,50 +241,21 @@ export class MiniPay {
     const sig = MiniPay.sig(
       '/v3/r/mpay/pay_m',
       this.#appKey,
-      [
-        'amt',
-        'app_remark',
-        'appid',
-        'bill_no',
-        'offer_id',
-        'openid',
-        'openkey',
-        'pay_item',
-        'pf',
-        'ts',
-        'user_ip',
-        'zone_id',
-      ],
+      keysToSign.pay.sig,
       payload,
     )
     const access_token = await this.#getAccessToken()
     const qq_sig = MiniPay.qqSig(
       '/v3/r/mpay/pay_m',
       user.sessionKey,
-      [
-        'access_token',
-        'appid',
-        'offer_id',
-        'openid',
-        'pf',
-        'sig',
-        'ts',
-        'zone_id',
-      ],
+      keysToSign.pay.qqSig,
       {
+        ..._.pick(payload, keysToSign.pay.qqSig),
         access_token,
         sig,
-        ..._.pick(payload, [
-          'appid',
-          'offer_id',
-          'openid',
-          'pf',
-          'ts',
-          'zone_id',
-        ]),
       },
     )
-    return this.base('MiniPay', {
+    return this.base('MiniPay', access_token, {
       ...payload,
       sig,
       sandbox_env: this.#sandbox ? 1 : 0,
@@ -249,46 +296,21 @@ export class MiniPay {
     const sig = MiniPay.sig(
       '/v3/r/mpay/get_balance_m',
       this.#appKey,
-      [
-        'appid',
-        'offer_id',
-        'openid',
-        'openkey',
-        'pf',
-        'pfkey',
-        'ts',
-        'zone_id',
-      ],
+      keysToSign.getBalance.sig,
       payload,
     )
     const access_token = await this.#getAccessToken()
     const qq_sig = MiniPay.qqSig(
       '/v3/r/mpay/get_balance_m',
       user.sessionKey,
-      [
-        'access_token',
-        'appid',
-        'offer_id',
-        'openid',
-        'pf',
-        'sig',
-        'ts',
-        'zone_id',
-      ],
+      keysToSign.getBalance.qqSig,
       {
+        ..._.pick(payload, keysToSign.getBalance.qqSig),
         access_token,
         sig,
-        ..._.pick(payload, [
-          'appid',
-          'offer_id',
-          'openid',
-          'pf',
-          'ts',
-          'zone_id',
-        ]),
       },
     )
-    return this.base('MiniGetBalance', {
+    return this.base('MiniGetBalance', access_token, {
       ...payload,
       sig,
       sandbox_env: this.#sandbox ? 1 : 0,
@@ -342,49 +364,21 @@ export class MiniPay {
     const sig = MiniPay.sig(
       '/v3/r/mpay/present_m',
       this.#appKey,
-      [
-        'bill_no',
-        'offer_id',
-        'openid',
-        'openkey',
-        'pf',
-        'pfkey',
-        'present_counts',
-        'qq_appid',
-        'ts',
-        'user_ip',
-        'zone_id',
-      ],
+      keysToSign.present.sig,
       payload,
     )
     const access_token = await this.#getAccessToken()
     const qq_sig = MiniPay.qqSig(
       '/v3/r/mpay/present_m',
       user.sessionKey,
-      [
-        'access_token',
-        'offer_id',
-        'openid',
-        'pf',
-        'qq_appid',
-        'sig',
-        'ts',
-        'zone_id',
-      ],
+      keysToSign.present.qqSig,
       {
+        ..._.pick(payload, keysToSign.present.qqSig),
         access_token,
         sig,
-        ..._.pick(payload, [
-          'offer_id',
-          'openid',
-          'pf',
-          'qq_appid',
-          'ts',
-          'zone_id',
-        ]),
       },
     )
-    return this.base('MiniPresent', {
+    return this.base('MiniPresent', access_token, {
       ...payload,
       sig,
       sandbox_env: this.#sandbox ? 1 : 0,
@@ -395,10 +389,10 @@ export class MiniPay {
 
   protected async base<I extends object, O extends Err>(
     method: string,
+    accessToken: string,
     params: I,
     retry = 0,
   ): Promise<O> {
-    const access_token = await this.#getAccessToken()
     debug('request', params)
     try {
       const response = await got(
@@ -406,7 +400,7 @@ export class MiniPay {
         {
           method: 'POST',
           searchParams: {
-            access_token,
+            access_token: accessToken,
           },
           json: params,
           http2: true,
@@ -429,7 +423,7 @@ export class MiniPay {
       }
     } catch (err) {
       if (err.code === ErrCode.BUSY && retry < this.#retryLimit) {
-        return this.base(method, params, retry + 1)
+        return this.base(method, accessToken, params, retry + 1)
       }
       throw err
     }
