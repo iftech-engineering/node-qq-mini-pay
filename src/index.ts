@@ -202,7 +202,7 @@ export class MiniPay {
       tradeId: string
     } & Err
   > {
-    return this.base('/api/json/openApiPay/MiniPay', user, {
+    return this.base('MiniPay', '/v3/r/mpay/pay_m', user, {
       bill_no: await nanoid(),
       amt: params.amt,
       user_ip: params.userIp,
@@ -227,7 +227,7 @@ export class MiniPay {
       remainder: number
     } & Err
   > {
-    return this.base('/api/json/openApiPay/MiniGetBalance', user, {})
+    return this.base('MiniGetBalance', '/v3/r/mpay/get_balance_m', user, {})
   }
 
   /**
@@ -256,7 +256,7 @@ export class MiniPay {
       balance: number
     } & Err
   > {
-    return this.base('/api/json/openApiPay/MiniPresent', user, {
+    return this.base('MiniPresent', '/v3/r/mpay/present_m', user, {
       bill_no: await nanoid(),
       present_counts: params.presentCounts,
       user_ip: params.userIp,
@@ -264,6 +264,7 @@ export class MiniPay {
   }
 
   protected async base<I extends object, O extends Err>(
+    method: string,
     pathname: string,
     user: User,
     params: I,
@@ -294,14 +295,17 @@ export class MiniPay {
     }
     debug('request', json)
     try {
-      const response = await got(`https://api.q.qq.com${pathname}`, {
-        method: 'POST',
-        searchParams: {
-          access_token,
+      const response = await got(
+        `https://api.q.qq.com/api/json/openApiPay/${method}`,
+        {
+          method: 'POST',
+          searchParams: {
+            access_token,
+          },
+          json,
+          http2: true,
         },
-        json,
-        http2: true,
-      }).json<{
+      ).json<{
         errcode: ErrCode
         errmsg: string
       }>()
@@ -319,7 +323,7 @@ export class MiniPay {
       }
     } catch (err) {
       if (err.code === ErrCode.BUSY && retry < this.#retryLimit) {
-        return this.base(pathname, user, params, retry + 1)
+        return this.base(method, pathname, user, params, retry + 1)
       }
       throw err
     }
