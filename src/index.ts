@@ -307,8 +307,10 @@ export class MiniPay {
       }>()
       debug('response', response)
       const { errcode, errmsg, ...rest } = response
-      if (errcode === ErrCode.BUSY) {
-        throw new Error(errmsg)
+      if (errcode !== ErrCode.SUCCESS) {
+        const error = new Error(errmsg || '')
+        ;(error as any).code = errcode
+        throw error
       }
       return {
         errCode: errcode,
@@ -316,7 +318,7 @@ export class MiniPay {
         ...(mapValues(rest, camelCase) as any),
       }
     } catch (err) {
-      if (retry < this.#retryLimit) {
+      if (err.code === ErrCode.BUSY && retry < this.#retryLimit) {
         return this.base(pathname, user, params, retry + 1)
       }
       throw err
