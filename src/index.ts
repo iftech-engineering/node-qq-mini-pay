@@ -56,82 +56,6 @@ export type User = {
   zoneId?: string
 }
 
-const keysToSign = {
-  pay: {
-    sig: [
-      'amt',
-      'app_remark',
-      'appid',
-      'bill_no',
-      'offer_id',
-      'openid',
-      'openkey',
-      'pay_item',
-      'pf',
-      'ts',
-      'user_ip',
-      'zone_id',
-    ],
-    qqSig: [
-      'access_token',
-      'appid',
-      'offer_id',
-      'openid',
-      'pf',
-      'sig',
-      'ts',
-      'zone_id',
-    ],
-  },
-  getBalance: {
-    sig: [
-      'appid',
-      'offer_id',
-      'openid',
-      'openkey',
-      'pf',
-      'pfkey',
-      'ts',
-      'zone_id',
-    ],
-    qqSig: [
-      'access_token',
-      'appid',
-      'offer_id',
-      'openid',
-      'pf',
-      'sig',
-      'ts',
-      'zone_id',
-    ],
-  },
-  present: {
-    sig: [
-      'bill_no',
-      'offer_id',
-      'openid',
-      'openkey',
-      'pf',
-      'pfkey',
-      'present_counts',
-      'qq_appid',
-      'ts',
-      'user_ip',
-      'zone_id',
-    ],
-    qqSig: [
-      'access_token',
-      'offer_id',
-      'openid',
-      'pf',
-      'qq_appid',
-      'sig',
-      'ts',
-      'zone_id',
-    ],
-  },
-}
-
 /**
  * 错误
  * @typedef {object} Response
@@ -241,16 +165,16 @@ export class MiniPay {
     const sig = MiniPay.sig(
       '/v3/r/mpay/pay_m',
       this.#appKey,
-      keysToSign.pay.sig,
+      MiniPay.keysToSign.pay.sig,
       payload,
     )
     const access_token = await this.#getAccessToken()
     const qq_sig = MiniPay.qqSig(
       '/v3/r/mpay/pay_m',
       user.sessionKey,
-      keysToSign.pay.qqSig,
+      MiniPay.keysToSign.pay.qqSig,
       {
-        ..._.pick(payload, keysToSign.pay.qqSig),
+        ..._.pick(payload, MiniPay.keysToSign.pay.qqSig),
         access_token,
         sig,
       },
@@ -296,16 +220,16 @@ export class MiniPay {
     const sig = MiniPay.sig(
       '/v3/r/mpay/get_balance_m',
       this.#appKey,
-      keysToSign.getBalance.sig,
+      MiniPay.keysToSign.getBalance.sig,
       payload,
     )
     const access_token = await this.#getAccessToken()
     const qq_sig = MiniPay.qqSig(
       '/v3/r/mpay/get_balance_m',
       user.sessionKey,
-      keysToSign.getBalance.qqSig,
+      MiniPay.keysToSign.getBalance.qqSig,
       {
-        ..._.pick(payload, keysToSign.getBalance.qqSig),
+        ..._.pick(payload, MiniPay.keysToSign.getBalance.qqSig),
         access_token,
         sig,
       },
@@ -364,16 +288,16 @@ export class MiniPay {
     const sig = MiniPay.sig(
       '/v3/r/mpay/present_m',
       this.#appKey,
-      keysToSign.present.sig,
+      MiniPay.keysToSign.present.sig,
       payload,
     )
     const access_token = await this.#getAccessToken()
     const qq_sig = MiniPay.qqSig(
       '/v3/r/mpay/present_m',
       user.sessionKey,
-      keysToSign.present.qqSig,
+      MiniPay.keysToSign.present.qqSig,
       {
-        ..._.pick(payload, keysToSign.present.qqSig),
+        ..._.pick(payload, MiniPay.keysToSign.present.qqSig),
         access_token,
         sig,
       },
@@ -462,5 +386,81 @@ export class MiniPay {
         )}`,
       )
       .digest('base64')
+  }
+
+  private static keysToSign = {
+    pay: {
+      sig: [
+        'amt',
+        'app_remark',
+        'appid',
+        'bill_no',
+        'offer_id',
+        'openid',
+        'openkey',
+        'pay_item',
+        'pf',
+        'ts',
+        'user_ip',
+        'zone_id',
+      ],
+      qqSig: [
+        'access_token',
+        'appid',
+        'offer_id',
+        'openid',
+        'pf',
+        'sig',
+        'ts',
+        'zone_id',
+      ],
+    },
+    getBalance: {
+      sig: [
+        'appid',
+        'offer_id',
+        'openid',
+        'openkey',
+        'pf',
+        'pfkey',
+        'ts',
+        'zone_id',
+      ],
+      qqSig: [
+        'access_token',
+        'appid',
+        'offer_id',
+        'openid',
+        'pf',
+        'sig',
+        'ts',
+        'zone_id',
+      ],
+    },
+    present: {
+      sig: [
+        'bill_no',
+        'offer_id',
+        'openid',
+        'openkey',
+        'pf',
+        'pfkey',
+        'present_counts',
+        'qq_appid',
+        'ts',
+        'user_ip',
+        'zone_id',
+      ],
+      qqSig: [
+        'access_token',
+        'offer_id',
+        'openid',
+        'pf',
+        'qq_appid',
+        'sig',
+        'ts',
+        'zone_id',
+      ],
+    },
   }
 }

@@ -8,20 +8,7 @@ describe('pay', () => {
       MiniPay['sig'](
         '/v3/r/mpay/pay_m',
         'zNLgAGgqsEWJOg1nFVaO5r7fAlIQxr1u',
-        [
-          'amt',
-          'app_remark',
-          'appid',
-          'bill_no',
-          'offer_id',
-          'openid',
-          'openkey',
-          'pay_item',
-          'pf',
-          'ts',
-          'user_ip',
-          'zone_id',
-        ],
+        MiniPay['keysToSign'].pay.sig,
         {
           openid: '383124F311F19D1DA9BA0CC51028CC88',
           openkey: 'NVdzZndGOVgybGlKRk1kAA==', // 小程序平台session_key
@@ -46,16 +33,7 @@ describe('pay', () => {
       MiniPay['qqSig'](
         '/v3/r/mpay/pay_m',
         'NVdzZndGOVgybGlKRk1kAA==',
-        [
-          'access_token',
-          'appid',
-          'offer_id',
-          'openid',
-          'pf',
-          'sig',
-          'ts',
-          'zone_id',
-        ],
+        MiniPay['keysToSign'].pay.qqSig,
         {
           access_token: 'ACCESSTOKEN',
           openid: '383124F311F19D1DA9BA0CC51028CC88',
@@ -78,16 +56,7 @@ describe('getBalance', () => {
       MiniPay['sig'](
         '/v3/r/mpay/get_balance_m',
         'zNLgAGgqsEWJOg1nFVaO5r7fAlIQxr1u',
-        [
-          'appid',
-          'offer_id',
-          'openid',
-          'openkey',
-          'pf',
-          'pfkey',
-          'ts',
-          'zone_id',
-        ],
+        MiniPay['keysToSign'].getBalance.sig,
         {
           openid: '383124F311F19D1DA9BA0CC51028CC88',
           openkey: 'NVdzZndGOVgybGlKRk1kAA==', // 小程序平台session_key
@@ -108,16 +77,7 @@ describe('getBalance', () => {
       MiniPay['qqSig'](
         '/v3/r/mpay/get_balance_m',
         'NVdzZndGOVgybGlKRk1kAA==',
-        [
-          'access_token',
-          'appid',
-          'offer_id',
-          'openid',
-          'pf',
-          'sig',
-          'ts',
-          'zone_id',
-        ],
+        MiniPay['keysToSign'].getBalance.qqSig,
         {
           access_token: 'ACCESSTOKEN',
           openid: '383124F311F19D1DA9BA0CC51028CC88',
@@ -140,19 +100,7 @@ describe('present', () => {
       MiniPay['sig'](
         '/v3/r/mpay/present_m',
         'zNLgAGgqsEWJOg1nFVaO5r7fAlIQxr1u',
-        [
-          'bill_no',
-          'offer_id',
-          'openid',
-          'openkey',
-          'pf',
-          'pfkey',
-          'present_counts',
-          'qq_appid',
-          'ts',
-          'user_ip',
-          'zone_id',
-        ],
+        MiniPay['keysToSign'].present.sig,
         {
           openid: '383124F311F19D1DA9BA0CC51028CC88',
           openkey: 'NVdzZndGOVgybGlKRk1kAA==', // 小程序平台session_key
@@ -176,16 +124,7 @@ describe('present', () => {
       MiniPay['qqSig'](
         '/v3/r/mpay/present_m',
         'NVdzZndGOVgybGlKRk1kAA==',
-        [
-          'access_token',
-          'offer_id',
-          'openid',
-          'pf',
-          'qq_appid',
-          'sig',
-          'ts',
-          'zone_id',
-        ],
+        MiniPay['keysToSign'].present.qqSig,
         {
           access_token: 'ACCESSTOKEN',
           openid: '383124F311F19D1DA9BA0CC51028CC88',
