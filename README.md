@@ -31,6 +31,7 @@ const miniPay = new MiniPay({
   },
   sandbox: false,
   retryLimit: 3,
+  http2: true,
 })
 
 const user = {
