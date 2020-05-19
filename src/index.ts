@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto'
-import got from 'got'
+import request from 'request-promise-native'
 import { nanoid } from 'nanoid/async'
 import _ from 'lodash'
 import Debug from 'debug'
@@ -78,7 +78,6 @@ export class MiniPay {
   readonly #getAccessToken: () => Promise<string>
   readonly #sandbox: boolean
   readonly #retryLimit: number
-  readonly #http2: boolean
 
   /**
    * @constructor
@@ -88,7 +87,6 @@ export class MiniPay {
    * @param {function} getAccessToken 获取最新 AccessToken 的函数
    * @param {boolean} [sandbox=false] 是否请求沙箱环境，默认为 false
    * @param {number} [retryLimit=3] 重试次数，默认为 3
-   * @param {boolean} [http2=false] 是否使用 HTTP/2
    */
   constructor({
     appId,
@@ -97,7 +95,6 @@ export class MiniPay {
     getAccessToken,
     sandbox = false,
     retryLimit = 3,
-    http2 = false,
   }: {
     appId: string
     appKey: string
@@ -105,7 +102,6 @@ export class MiniPay {
     getAccessToken: () => Promise<string>
     sandbox?: boolean
     retryLimit?: number
-    http2?: boolean
   }) {
     this.#appId = appId
     this.#appKey = appKey
@@ -113,7 +109,6 @@ export class MiniPay {
     this.#getAccessToken = getAccessToken
     this.#sandbox = sandbox
     this.#retryLimit = retryLimit
-    this.#http2 = http2
   }
 
   /**
@@ -327,20 +322,16 @@ export class MiniPay {
   >(method: string, accessToken: string, params: I, retry = 0): Promise<O> {
     debug('request', params)
     try {
-      const response = await got(
-        `https://api.q.qq.com/api/json/openApiPay/${method}`,
-        {
-          method: 'POST',
-          searchParams: {
-            access_token: accessToken,
-          },
-          json: params,
-          http2: this.#http2,
-        },
-      ).json<{
+      const response: {
         errcode: ErrCode
         errmsg: string
-      }>()
+      } = await request(`https://api.q.qq.com/api/json/openApiPay/${method}`, {
+        method: 'POST',
+        qs: {
+          access_token: accessToken,
+        },
+        json: params,
+      })
       debug('response', response)
       const { errcode, errmsg, ...rest } = response
       if (errcode !== ErrCode.SUCCESS) {
