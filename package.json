@@ -1,6 +1,6 @@
 {
   "name": "qq-mini-pay",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
-    "@types/lodash": "^4.14.151",
+    "@types/lodash": "^4.14.152",
     "@types/mocha": "^7.0.2",
     "assert": "^2.0.0",
     "husky": "^4.2.5",
@@ -36,7 +36,7 @@
     "mocha": "^7.1.2",
     "prettier": "^2.0.5",
     "ts-node": "^8.10.1",
-    "typescript": "^3.9.2"
+    "typescript": "^3.9.3"
   },
   "husky": {
     "hooks": {

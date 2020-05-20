@@ -354,7 +354,8 @@ export class MiniPay {
         ...(_.mapValues(rest, _.camelCase) as any),
       }
     } catch (err) {
-      if (err.code === ErrCode.BUSY && retry < this.#retryLimit) {
+      debug('error', err)
+      if (retry < this.#retryLimit) {
         return this.base(method, accessToken, params, retry + 1)
       }
       throw err
