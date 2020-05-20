@@ -332,7 +332,7 @@ export class MiniPay {
         },
         json: params,
       }).catch((x) => {
-        console.log('error:', x)
+        debug('error: %j', x)
         throw x
       })
       debug('response', response)
