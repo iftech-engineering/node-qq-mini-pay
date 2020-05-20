@@ -331,6 +331,9 @@ export class MiniPay {
           access_token: accessToken,
         },
         json: params,
+      }).catch((x) => {
+        console.log('error:', x)
+        throw x
       })
       debug('response', response)
       const { errcode, errmsg, ...rest } = response
