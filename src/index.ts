@@ -88,7 +88,7 @@ export class MiniPay {
    * @param {function} getAccessToken 获取最新 AccessToken 的函数
    * @param {boolean} [sandbox=false] 是否请求沙箱环境，默认为 false
    * @param {number} [retryLimit=3] 重试次数，默认为 3
-   * @param {boolean} [http2=false] 是否使用 HTTP/2
+   * @param {boolean} [http2=true] 是否使用 HTTP/2
    */
   constructor({
     appId,
@@ -97,7 +97,7 @@ export class MiniPay {
     getAccessToken,
     sandbox = false,
     retryLimit = 3,
-    http2 = false,
+    http2 = true,
   }: {
     appId: string
     appKey: string
@@ -354,7 +354,7 @@ export class MiniPay {
         ...(_.mapValues(rest, _.camelCase) as any),
       }
     } catch (err) {
-      debug('error', err)
+      debug('error %j', err)
       if (retry < this.#retryLimit) {
         return this.base(method, accessToken, params, retry + 1)
       }
