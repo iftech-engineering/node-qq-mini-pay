@@ -288,7 +288,7 @@ export class MiniPay {
         present_counts: params.presentCounts,
         bill_no: await nanoid(),
       },
-      _.isEmpty,
+      _.isNil,
     )
     const sig = MiniPay.sig(
       '/v3/r/mpay/present_m',
