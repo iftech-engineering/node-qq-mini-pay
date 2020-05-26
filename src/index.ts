@@ -325,7 +325,7 @@ export class MiniPay {
     },
     O extends Response
   >(method: string, accessToken: string, params: I, retry = 0): Promise<O> {
-    debug('request', params)
+    debug('request %j', params)
     try {
       const response = await got(
         `https://api.q.qq.com/api/json/openApiPay/${method}`,
@@ -341,7 +341,7 @@ export class MiniPay {
         errcode: ErrCode
         errmsg: string
       }>()
-      debug('response', response)
+      debug('response %j', response)
       const { errcode, errmsg, ...rest } = response
       if (errcode !== ErrCode.SUCCESS) {
         const error = new Error(errmsg || '')
