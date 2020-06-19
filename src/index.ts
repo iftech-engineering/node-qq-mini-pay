@@ -354,7 +354,16 @@ export class MiniPay {
         ...(_.mapValues(rest, _.camelCase) as any),
       }
     } catch (err) {
-      debug('error %j', err)
+      if (err instanceof got.HTTPError) {
+        debug(
+          'HTTPError %j %j %j',
+          err.response.statusCode,
+          err.response.headers,
+          err.response.body,
+        )
+      } else {
+        debug('error %j', err)
+      }
       if (retry < this.#retryLimit) {
         return this.base(method, accessToken, params, retry + 1)
       }
