@@ -22,21 +22,21 @@
   "homepage": "https://github.com/jike-engineering/node-qq-mini-pay#readme",
   "dependencies": {
     "debug": "^4.1.1",
-    "got": "^11.1.4",
+    "got": "^11.3.0",
     "lodash": "^4.17.15",
-    "nanoid": "^3.1.9"
+    "nanoid": "^3.1.10"
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
-    "@types/lodash": "^4.14.152",
+    "@types/lodash": "^4.14.156",
     "@types/mocha": "^7.0.2",
     "assert": "^2.0.0",
     "husky": "^4.2.5",
-    "lint-staged": "^10.2.6",
-    "mocha": "^7.2.0",
+    "lint-staged": "^10.2.11",
+    "mocha": "^8.0.1",
     "prettier": "^2.0.5",
-    "ts-node": "^8.10.1",
-    "typescript": "^3.9.3"
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.5"
   },
   "husky": {
     "hooks": {
