@@ -3,7 +3,7 @@
 QQ 小程序虚拟支付（米大师）
 
 [![npm version](https://badge.fury.io/js/qq-mini-pay.svg)](https://badge.fury.io/js/qq-mini-pay)
-[![CircleCI](https://circleci.com/gh/jike-engineering/node-qq-mini-pay.svg?style=shield)](https://circleci.com/gh/jike-engineering/node-qq-mini-pay)
+[![CircleCI](https://circleci.com/gh/iftech-engineering/node-qq-mini-pay.svg?style=shield)](https://circleci.com/gh/iftech-engineering/node-qq-mini-pay)
 
 ## Feature
 
