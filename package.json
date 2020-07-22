@@ -1,6 +1,6 @@
 {
   "name": "qq-mini-pay",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -22,21 +22,21 @@
   "homepage": "https://github.com/jike-engineering/node-qq-mini-pay#readme",
   "dependencies": {
     "debug": "^4.1.1",
-    "got": "^11.3.0",
-    "lodash": "^4.17.15",
+    "got": "^11.5.1",
+    "lodash": "^4.17.19",
     "nanoid": "^3.1.10"
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
-    "@types/lodash": "^4.14.156",
-    "@types/mocha": "^7.0.2",
+    "@types/lodash": "^4.14.158",
+    "@types/mocha": "^8.0.0",
     "assert": "^2.0.0",
     "husky": "^4.2.5",
     "lint-staged": "^10.2.11",
     "mocha": "^8.0.1",
     "prettier": "^2.0.5",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.5"
+    "typescript": "^3.9.7"
   },
   "husky": {
     "hooks": {
