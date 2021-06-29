@@ -8,7 +8,7 @@ QQ 小程序虚拟支付（米大师）
 ## Install
 
 ```bash
-npm i -S qq-mini-pay
+yarn add qq-mini-pay
 ```
 
 ## Usage
